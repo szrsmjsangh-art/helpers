@@ -1,3 +1,1 @@
-export default function Button({ children, className = '', ...props }) {
-  return <button className={`rounded-xl bg-emerald-700 px-4 py-3 font-medium text-white disabled:opacity-50 ${className}`} {...props}>{children}</button>
-}
+export default function Button({className='',children,...props}){ return <button {...props} className={`rounded-[11px] bg-gradient-to-r from-[#0c9a43] to-[#16b553] px-4 py-3 text-sm font-bold text-white shadow-[0_5px_14px_rgba(16,150,70,.22)] transition active:scale-[.99] disabled:opacity-60 ${className}`}>{children}</button> }

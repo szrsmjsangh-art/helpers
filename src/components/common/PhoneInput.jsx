@@ -1,2 +1,1 @@
-import TextInput from './TextInput'
-export default function PhoneInput(props) { return <TextInput inputMode="tel" {...props} /> }
+export default function PhoneInput({label,...props}){ return <label className="block"><span className="mb-1.5 block text-[11px] font-bold text-[#353c46]">{label}</span><div className="flex h-11 overflow-hidden rounded-[10px] border border-[#dcdfe3] bg-white focus-within:border-[#63b27b] focus-within:ring-2 focus-within:ring-[#dff4e5]"><span className="flex items-center border-r border-[#e4e5e7] px-3 text-xs font-bold text-[#59616c]">+91</span><input {...props} className="min-w-0 flex-1 border-0 px-3 text-sm outline-none"/></div></label> }

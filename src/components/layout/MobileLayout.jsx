@@ -4,11 +4,13 @@ import BottomNav from './BottomNav'
 
 export default function MobileLayout() {
   return (
-    <div className="min-h-screen bg-amber-50 pb-20">
-      <Header />
-      <main className="mx-auto w-full max-w-3xl px-3 py-4">
-        <Outlet />
-      </main>
+    <div className="min-h-screen bg-[#f4f6f8] pb-[78px]">
+      <div className="mx-auto min-h-screen w-full max-w-[480px] bg-[#fffdf9] shadow-[0_0_50px_rgba(31,41,55,0.08)]">
+        <Header />
+        <main className="w-full">
+          <Outlet />
+        </main>
+      </div>
       <BottomNav />
     </div>
   )

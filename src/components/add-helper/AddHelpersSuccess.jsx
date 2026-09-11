@@ -1,1 +1,2 @@
-export default function AddHelpersSuccess({ count=1 }) { return <div className="rounded-2xl bg-emerald-50 p-5 text-emerald-800">{count} helper{count===1?'':'s'} submitted successfully.</div> }
+import { CheckCircle2 } from 'lucide-react'
+export default function AddHelpersSuccess({ count=1 }) { return <div className="rounded-[16px] border border-[#cdebd5] bg-[#eefaf1] p-4 text-center text-[#167d3e]"><CheckCircle2 size={32} className="mx-auto"/><div className="mt-2 text-sm font-black">Helper Added Successfully!</div><div className="mt-1 text-[11px]">{count} helper{count===1?'':'s'} submitted to the directory.</div></div> }

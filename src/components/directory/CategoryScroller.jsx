@@ -1,2 +1,23 @@
 import CategoryCard from './CategoryCard'
-export default function CategoryScroller({ categories, getLabel }) { return <div className="grid grid-cols-2 gap-3">{categories.map(c=><CategoryCard key={c.id} category={c} label={getLabel(c)} />)}</div> }
+
+export default function CategoryScroller({
+  categories,
+  getLabel,
+  selectedCategoryId,
+  onSelect,
+}) {
+  return (
+    <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 scrollbar-hide">
+      {categories.map((category,index)=>(
+        <CategoryCard
+          key={category.id}
+          category={category}
+          label={getLabel(category)}
+          index={index}
+          active={category.id===selectedCategoryId}
+          onClick={()=>onSelect?.(category.id)}
+        />
+      ))}
+    </div>
+  )
+}
