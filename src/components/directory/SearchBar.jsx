@@ -1,0 +1,1 @@
+export default function SearchBar({ value, onChange }) { return <input value={value} onChange={e=>onChange(e.target.value)} placeholder="Search name, service or area" className="w-full rounded-2xl border bg-white px-4 py-3" /> }

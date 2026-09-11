@@ -1,0 +1,1 @@
+export default function Modal({ open, onClose, children }) { if (!open) return null; return <div className="fixed inset-0 z-50 bg-black/40" onClick={onClose}><div className="absolute inset-x-0 bottom-0 max-h-[90vh] overflow-auto rounded-t-3xl bg-white p-4 md:left-1/2 md:max-w-xl md:-translate-x-1/2" onClick={(e)=>e.stopPropagation()}>{children}</div></div> }

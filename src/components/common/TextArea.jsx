@@ -1,0 +1,1 @@
+export default function TextArea({ label, ...props }) { return <label className="block"><span className="mb-1 block text-sm font-medium">{label}</span><textarea className="w-full rounded-xl border border-gray-300 bg-white px-3 py-3 outline-none focus:border-emerald-600" {...props} /></label> }

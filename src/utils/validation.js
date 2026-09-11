@@ -1,0 +1,2 @@
+import { normalizeIndianMobile } from './phoneUtils'
+export function validateHelper(form){ if(!form.name?.trim()) return 'Name is required'; if(!/^[6-9]\d{9}$/.test(normalizeIndianMobile(form.mobile))) return 'Valid 10 digit mobile is required'; if(!form.categoryId) return 'Category is required'; if(!form.serviceTypeId) return 'Service type is required'; if(!form.area?.trim()) return 'Area is required'; return '' }

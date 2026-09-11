@@ -1,0 +1,1 @@
+export default function ApprovedHelpersList({ helpers=[] }) { return <div className="space-y-2">{helpers.map((h,i)=><div key={i} className="rounded-xl border bg-white p-3">{h.name} · {h.mobile}</div>)}</div> }

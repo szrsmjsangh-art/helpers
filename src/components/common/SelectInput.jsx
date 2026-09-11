@@ -1,0 +1,1 @@
+export default function SelectInput({ label, children, ...props }) { return <label className="block"><span className="mb-1 block text-sm font-medium">{label}</span><select className="w-full rounded-xl border border-gray-300 bg-white px-3 py-3 outline-none focus:border-emerald-600" {...props}>{children}</select></label> }

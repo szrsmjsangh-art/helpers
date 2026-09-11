@@ -1,0 +1,1 @@
+export default function ImageUpload({ onChange }) { return <label className="block"><span className="mb-1 block text-sm font-medium">Photo</span><input type="file" accept="image/*" onChange={(e)=>onChange?.(e.target.files?.[0] || null)} /></label> }

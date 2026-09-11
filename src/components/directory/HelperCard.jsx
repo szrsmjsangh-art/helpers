@@ -1,0 +1,1 @@
+export default function HelperCard({ helper, onClick }) { return <button onClick={()=>onClick(helper)} className="w-full rounded-2xl border bg-white p-4 text-left shadow-sm"><div className="font-semibold">{helper.name}</div><div className="mt-1 text-sm text-gray-500">{helper.area}</div><div className="mt-2 text-sm text-emerald-700">{helper.mobile}</div></button> }

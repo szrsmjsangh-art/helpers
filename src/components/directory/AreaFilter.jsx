@@ -1,0 +1,1 @@
+export default function AreaFilter({ value,onChange,areas=[] }) { return <select value={value} onChange={e=>onChange(e.target.value)} className="rounded-xl border bg-white px-3 py-2 text-sm"><option value="">All areas</option>{areas.map(a=><option key={a} value={a}>{a}</option>)}</select> }

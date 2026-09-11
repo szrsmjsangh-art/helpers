@@ -1,0 +1,1 @@
+export default function ContactSelectionList({ contacts=[] }) { return <div className="space-y-2">{contacts.map((c,i)=><div key={i} className="rounded-xl border bg-white p-3"><div className="font-medium">{c.name?.[0] || 'Unnamed'}</div><div className="text-sm text-gray-500">{c.tel?.[0] || ''}</div></div>)}</div> }

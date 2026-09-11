@@ -1,0 +1,1 @@
+export default function ServiceTypeChip({ active, children, ...props }) { return <button className={`whitespace-nowrap rounded-full border px-3 py-2 text-sm ${active ? 'bg-emerald-700 text-white' : 'bg-white'}`} {...props}>{children}</button> }
