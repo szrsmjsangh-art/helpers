@@ -36,7 +36,7 @@ const blank = {
   whatsapp: '',
   categoryId: '',
   serviceTypeId: '',
-  area: '',
+  area: ' ',
   description: '',
   submittedName: '',
   photoUrl: '',
