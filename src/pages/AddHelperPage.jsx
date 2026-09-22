@@ -59,9 +59,24 @@ function getContactPhone(contact) {
 }
 
 function cleanPhone(value = '') {
-  return String(value)
-    .replace(/[^\d+]/g, '')
-    .trim()
+  let digits = String(value).replace(/\D/g, '')
+
+  // +91XXXXXXXXXX / 91XXXXXXXXXX
+  if (digits.length === 12 && digits.startsWith('91')) {
+    digits = digits.slice(2)
+  }
+
+  // 0XXXXXXXXXX
+  if (digits.length === 11 && digits.startsWith('0')) {
+    digits = digits.slice(1)
+  }
+
+  // Safety: if extra prefix exists, keep last 10 digits
+  if (digits.length > 10) {
+    digits = digits.slice(-10)
+  }
+
+  return digits
 }
 
 export default function AddHelperPage() {
@@ -249,22 +264,15 @@ export default function AddHelperPage() {
         )
 
         return {
-          localId: `${Date.now()}-${index}`,
+  localId: `${Date.now()}-${index}`,
+  name,
+  mobile,
 
-          name,
-          mobile,
-          whatsapp: mobile,
+  categoryId: suggestion?.categoryId || '',
+  serviceTypeId: suggestion?.serviceTypeId || '',
 
-          categoryId: suggestion?.categoryId || '',
-          serviceTypeId: suggestion?.serviceTypeId || '',
-
-          area: '',
-          description: '',
-          submittedName: '',
-          photoUrl: '',
-
-          suggested: Boolean(suggestion),
-        }
+  suggested: Boolean(suggestion),
+}
       })
       .filter((contact) => contact.name || contact.mobile)
 
@@ -365,21 +373,19 @@ export default function AddHelperPage() {
     setImportError('')
     setImportSuccessCount(0)
 
-    const invalidContact = importedContacts.find(
-      (contact) =>
-        !contact.name.trim() ||
-        !contact.mobile.trim() ||
-        !contact.categoryId ||
-        !contact.serviceTypeId ||
-        !contact.area.trim()
-    )
-
-    if (invalidContact) {
-      setImportError(
-        'Please complete Name, Mobile, Category, Service Type and Area for every selected contact.'
-      )
-      return
-    }
+const invalidContact = importedContacts.find(
+  (contact) =>
+    !contact.name.trim() ||
+    !/^[6-9]\d{9}$/.test(contact.mobile) ||
+    !contact.categoryId ||
+    !contact.serviceTypeId
+)
+   if (invalidContact) {
+  setImportError(
+    'Please complete Name, valid 10-digit Mobile Number, Category and Service Type for every contact.'
+  )
+  return
+}
 
     setSavingContacts(true)
 
@@ -388,16 +394,16 @@ export default function AddHelperPage() {
     try {
       for (const contact of importedContacts) {
         await submitHelper({
-          name: contact.name,
-          mobile: contact.mobile,
-          whatsapp: contact.whatsapp,
-          categoryId: contact.categoryId,
-          serviceTypeId: contact.serviceTypeId,
-          area: contact.area,
-          description: contact.description,
-          submittedName: contact.submittedName,
-          photoUrl: '',
-        })
+  name: contact.name.trim(),
+  mobile: contact.mobile,
+  whatsapp: null,
+  categoryId: contact.categoryId,
+  serviceTypeId: contact.serviceTypeId,
+  area: null,
+  description: null,
+  submittedName: null,
+  photoUrl: null,
+})
 
         savedCount += 1
         setImportSuccessCount(savedCount)
