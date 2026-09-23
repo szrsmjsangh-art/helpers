@@ -476,22 +476,7 @@ const invalidContact = importedContacts.find(
           </div>
 
           {/* COMMON AREA */}
-          <div className="mb-3 rounded-[14px] border border-[#e1e8e3] bg-[#f7fbf8] p-3">
-            <label className="mb-1 block text-[10px] font-bold text-[#333943]">
-              Same Area for all selected contacts
-            </label>
-
-            <input
-              type="text"
-              placeholder="e.g. Zadeshwar"
-              onChange={(e) => applyAreaToAll(e.target.value)}
-              className="h-10 w-full rounded-[10px] border border-[#d8dee3] bg-white px-3 text-xs outline-none focus:border-[#0c9b45]"
-            />
-
-            <p className="mt-1 text-[9px] text-[#7b858f]">
-              Optional shortcut. You can still change the area individually.
-            </p>
-          </div>
+         
 
           <div className="space-y-3">
             {importedContacts.map((contact, index) => {
@@ -644,7 +629,7 @@ const invalidContact = importedContacts.find(
                         )
                       }
                       placeholder="e.g. Zadeshwar"
-                      required
+                      
                     />
 
                     <TextArea
