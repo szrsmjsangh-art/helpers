@@ -407,6 +407,9 @@ const invalidContact = importedContacts.find(
 
         savedCount += 1
         setImportSuccessCount(savedCount)
+        setTimeout(() => {
+  setImportSuccessCount(0)
+}, 3000)
       }
 
       setImportedContacts([])
