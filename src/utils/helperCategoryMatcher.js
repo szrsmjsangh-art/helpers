@@ -63,16 +63,23 @@ const SERVICE_RULES = [
   },
   {
     service: 'TV Repair',
-    keywords: ['tv repair', 'tv service', 'television repair'],
+    keywords: [
+      'tv repair',
+      'tv service',
+      'television repair',
+    ],
   },
-
   {
     service: 'Catering',
     keywords: ['catering', 'caterer', 'caterers'],
   },
   {
     service: 'Decoration',
-    keywords: ['decoration', 'decorator', 'decorators'],
+    keywords: [
+      'decoration',
+      'decorator',
+      'decorators',
+    ],
   },
   {
     service: 'Photography',
@@ -95,29 +102,43 @@ const SERVICE_RULES = [
   },
   {
     service: 'Sound / DJ',
-    keywords: ['sound system', 'sound service', 'dj'],
+    keywords: [
+      'sound system',
+      'sound service',
+      'dj',
+    ],
   },
-
   {
     service: 'Doctor / Clinic',
     keywords: ['doctor', 'clinic'],
   },
   {
     service: 'Physiotherapist',
-    keywords: ['physiotherapist', 'physio', 'physiotherapy'],
+    keywords: [
+      'physiotherapist',
+      'physio',
+      'physiotherapy',
+    ],
   },
   {
     service: 'Home Nursing',
-    keywords: ['home nursing', 'nursing', 'nurse'],
+    keywords: [
+      'home nursing',
+      'nursing',
+      'nurse',
+    ],
   },
   {
     service: 'Ambulance',
     keywords: ['ambulance'],
   },
-
   {
     service: 'Car Mechanic',
-    keywords: ['car mechanic', 'car garage', 'car repair'],
+    keywords: [
+      'car mechanic',
+      'car garage',
+      'car repair',
+    ],
   },
   {
     service: 'Bike Mechanic',
@@ -130,24 +151,41 @@ const SERVICE_RULES = [
   },
   {
     service: 'Tyre / Puncture',
-    keywords: ['puncture', 'tyre service', 'tyre shop', 'tire shop'],
+    keywords: [
+      'puncture',
+      'tyre service',
+      'tyre shop',
+      'tire shop',
+    ],
   },
   {
     service: 'Towing Service',
-    keywords: ['towing', 'tow service'],
+    keywords: [
+      'towing',
+      'tow service',
+    ],
   },
   {
     service: 'Car Wash',
-    keywords: ['car wash', 'car washing'],
+    keywords: [
+      'car wash',
+      'car washing',
+    ],
   },
-
   {
     service: 'Driver',
-    keywords: ['driver', 'driving service'],
+    keywords: [
+      'driver',
+      'driving service',
+    ],
   },
   {
     service: 'Tutor',
-    keywords: ['tutor', 'tuition', 'teacher'],
+    keywords: [
+      'tutor',
+      'tuition',
+      'teacher',
+    ],
   },
   {
     service: 'CA / Tax Consultant',
@@ -160,7 +198,10 @@ const SERVICE_RULES = [
   },
   {
     service: 'Advocate',
-    keywords: ['advocate', 'lawyer'],
+    keywords: [
+      'advocate',
+      'lawyer',
+    ],
   },
   {
     service: 'Computer / IT Support',
@@ -174,25 +215,45 @@ const SERVICE_RULES = [
   },
   {
     service: 'Cook',
-    keywords: ['cook', 'cooking service'],
+    keywords: [
+      'cook',
+      'cooking service',
+    ],
   },
   {
     service: 'Labour Contractor',
-    keywords: ['labour contractor', 'labor contractor'],
+    keywords: [
+      'labour contractor',
+      'labor contractor',
+    ],
   },
   {
     service: 'Laundry / Dhobi',
-    keywords: ['laundry', 'dhobi', 'dry clean', 'dryclean'],
+    keywords: [
+      'laundry',
+      'dhobi',
+      'dry clean',
+      'dryclean',
+    ],
   },
   {
     service: 'Snake Rescue',
-    keywords: ['snake rescue', 'snake catcher'],
+    keywords: [
+      'snake rescue',
+      'snake catcher',
+    ],
   },
   {
     service: 'Tailor',
-    keywords: ['tailor', 'tailoring'],
+    keywords: [
+      'tailor',
+      'tailoring',
+    ],
   },
 ]
+
+const FALLBACK_CATEGORY_NAME = 'Others'
+const FALLBACK_SERVICE_NAME = 'Other Service'
 
 function normalize(value = '') {
   return String(value)
@@ -214,33 +275,77 @@ function containsKeyword(name, keyword) {
 export function suggestHelperService(contactName, serviceTypes = []) {
   if (!contactName) return null
 
-  const rules = SERVICE_RULES.flatMap((rule) =>
-    rule.keywords.map((keyword) => ({
-      service: rule.service,
-      keyword,
-    }))
-  ).sort(
-    (a, b) =>
-      normalize(b.keyword).length - normalize(a.keyword).length
-  )
+  const rules = SERVICE_RULES
+    .flatMap((rule) =>
+      rule.keywords.map((keyword) => ({
+        service: rule.service,
+        keyword,
+      }))
+    )
+    .sort(
+      (a, b) =>
+        normalize(b.keyword).length -
+        normalize(a.keyword).length
+    )
+
+  // ---------------------------------------------------------
+  // 1. Try normal keyword matching
+  // ---------------------------------------------------------
 
   const matchedRule = rules.find((rule) =>
     containsKeyword(contactName, rule.keyword)
   )
 
-  if (!matchedRule) return null
+  if (matchedRule) {
+    const serviceType = serviceTypes.find(
+      (type) =>
+        normalize(type.name_en) ===
+        normalize(matchedRule.service)
+    )
 
-  const serviceType = serviceTypes.find(
+    if (serviceType) {
+      return {
+        categoryId: serviceType.category_id,
+        serviceTypeId: serviceType.id,
+        serviceTypeName: serviceType.name_en,
+        keyword: matchedRule.keyword,
+        isFallback: false,
+      }
+    }
+  }
+
+  // ---------------------------------------------------------
+  // 2. No match → Others / Other Service
+  // ---------------------------------------------------------
+
+  const fallbackService = serviceTypes.find(
     (type) =>
-      normalize(type.name_en) === normalize(matchedRule.service)
+      normalize(type.name_en) ===
+        normalize(FALLBACK_SERVICE_NAME) &&
+      normalize(type.category_name_en) ===
+        normalize(FALLBACK_CATEGORY_NAME)
   )
 
-  if (!serviceType) return null
+  // If category_name_en is not present in serviceTypes,
+  // find Other Service by name only.
+  const fallbackByName = serviceTypes.find(
+    (type) =>
+      normalize(type.name_en) ===
+      normalize(FALLBACK_SERVICE_NAME)
+  )
+
+  const fallbackServiceType =
+    fallbackService || fallbackByName
+
+  if (!fallbackServiceType) {
+    return null
+  }
 
   return {
-    categoryId: serviceType.category_id,
-    serviceTypeId: serviceType.id,
-    serviceTypeName: serviceType.name_en,
-    keyword: matchedRule.keyword,
+    categoryId: fallbackServiceType.category_id,
+    serviceTypeId: fallbackServiceType.id,
+    serviceTypeName: fallbackServiceType.name_en,
+    keyword: null,
+    isFallback: true,
   }
 }

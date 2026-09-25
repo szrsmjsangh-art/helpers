@@ -376,9 +376,8 @@ export default function AddHelperPage() {
 const invalidContact = importedContacts.find(
   (contact) =>
     !contact.name.trim() ||
-    !/^[6-9]\d{9}$/.test(contact.mobile) ||
-    !contact.categoryId ||
-    !contact.serviceTypeId
+    !/^[6-9]\d{9}$/.test(contact.mobile) 
+   
 )
    if (invalidContact) {
   setImportError(
