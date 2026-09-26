@@ -278,15 +278,16 @@ export default function AddHelperPage() {
         )
 
         return {
-  localId: `${Date.now()}-${index}`,
-  name,
-  mobile,
-
-  categoryId: suggestion?.categoryId || '',
-  serviceTypeId: suggestion?.serviceTypeId || '',
-
-  suggested: Boolean(suggestion),
-}
+          localId: `${Date.now()}-${index}`,
+          name,
+          mobile,
+          whatsapp: '',
+          area: '',
+          description: '',
+          categoryId: suggestion?.categoryId || '',
+          serviceTypeId: suggestion?.serviceTypeId || '',
+          suggested: Boolean(suggestion),
+        }
       })
       .filter((contact) => contact.name || contact.mobile)
 
@@ -380,7 +381,40 @@ export default function AddHelperPage() {
     )
   }
 
-  const submitImportedContacts = async () => {
+  const resolveContactIds = (contact) => {
+    if (contact.categoryId && contact.serviceTypeId) {
+      return {
+        categoryId: contact.categoryId,
+        serviceTypeId: contact.serviceTypeId,
+      }
+    }
+
+    const suggestion = suggestHelperService(
+      contact.name,
+      allServiceTypes
+    )
+
+    if (!suggestion) return null
+
+    return {
+      categoryId: suggestion.categoryId,
+      serviceTypeId: suggestion.serviceTypeId,
+    }
+  }
+
+  const contactPayloadFromReview = (contact, ids) => ({
+    name: contact.name.trim(),
+    mobile: contact.mobile,
+    whatsapp: contact.whatsapp?.trim() || null,
+    categoryId: ids.categoryId,
+    serviceTypeId: ids.serviceTypeId,
+    area: contact.area?.trim() || null,
+    description: contact.description?.trim() || null,
+    submittedName: null,
+    photoUrl: null,
+  })
+
+  const submitImportedContacts = async ({ quick = false } = {}) => {
     if (!importedContacts.length || savingContacts) {
       return
     }
@@ -388,52 +422,68 @@ export default function AddHelperPage() {
     setImportError('')
     setImportSuccessCount(0)
 
-const invalidContact = importedContacts.find(
-  (contact) =>
-    !contact.name.trim() ||
-    !/^[6-9]\d{9}$/.test(contact.mobile) 
-   
-)
-   if (invalidContact) {
-  setImportError(
-    'Please complete Name, valid 10-digit Mobile Number, Category and Service Type for every contact.'
-  )
-  return
-}
+    const invalidContact = importedContacts.find((contact) => {
+      if (!contact.name.trim() || !/^[6-9]\d{9}$/.test(contact.mobile)) {
+        return true
+      }
+      if (!quick) {
+        return !contact.categoryId || !contact.serviceTypeId
+      }
+      return false
+    })
+
+    if (invalidContact) {
+      setImportError(
+        quick
+          ? 'Every contact needs a name and valid 10-digit mobile number.'
+          : 'Please complete Name, valid Mobile, Category and Service Type for every contact.'
+      )
+      return
+    }
 
     setSavingContacts(true)
 
     let savedCount = 0
+    let skippedCount = 0
 
     try {
       for (const contact of importedContacts) {
-        await submitHelper({
-  name: contact.name.trim(),
-  mobile: contact.mobile,
-  whatsapp: null,
-  categoryId: contact.categoryId,
-  serviceTypeId: contact.serviceTypeId,
-  area: null,
-  description: null,
-  submittedName: null,
-  photoUrl: null,
-})
+        const ids = resolveContactIds(contact)
+
+        if (!ids) {
+          skippedCount += 1
+          continue
+        }
+
+        await submitHelper(contactPayloadFromReview(contact, ids))
 
         savedCount += 1
         setImportSuccessCount(savedCount)
-        setTimeout(() => {
-  setImportSuccessCount(0)
-}, 3000)
+      }
+
+      if (savedCount === 0) {
+        setImportError(
+          'No helpers were saved. Check names and that categories are loaded.'
+        )
+        return
       }
 
       setImportedContacts([])
       setImportSuccessCount(savedCount)
       setAddPath('choose')
+
+      if (skippedCount > 0) {
+        setImportError(
+          `${savedCount} saved. ${skippedCount} skipped (could not assign category).`
+        )
+      }
     } catch (err) {
       setImportError(
-        `${savedCount} helper(s) saved. ${
-          err?.message || 'Unable to save remaining helpers.'
-        }`
+        savedCount > 0
+          ? `${savedCount} helper(s) saved. ${
+              err?.message || 'Unable to save remaining helpers.'
+            }`
+          : err?.message || 'Unable to save helpers.'
       )
     } finally {
       setSavingContacts(false)
@@ -533,8 +583,29 @@ const invalidContact = importedContacts.find(
             </button>
           </div>
 
-          {/* COMMON AREA */}
-         
+          <button
+            type="button"
+            onClick={() => submitImportedContacts({ quick: true })}
+            disabled={savingContacts}
+            className="mb-3 flex w-full items-center justify-center gap-2 rounded-[12px] border border-[#0c9b45] bg-[#f3fbf5] px-4 py-3 text-sm font-bold text-[#0c9b45] disabled:opacity-50"
+          >
+            {savingContacts ? (
+              <>
+                <Loader2 size={18} className="animate-spin" />
+                Saving...
+              </>
+            ) : (
+              <>
+                <CheckCircle2 size={18} />
+                Submit all without review ({importedContacts.length})
+              </>
+            )}
+          </button>
+
+          <p className="mb-3 text-center text-[9px] leading-4 text-[#858b92]">
+            Uses name + mobile and suggested category (or Others). Scroll down
+            to edit details before submit.
+          </p>
 
           <div className="space-y-3">
             {importedContacts.map((contact, index) => {
@@ -725,7 +796,7 @@ const invalidContact = importedContacts.find(
 
           <button
             type="button"
-            onClick={submitImportedContacts}
+            onClick={() => submitImportedContacts({ quick: false })}
             disabled={savingContacts}
             className="mt-3 flex w-full items-center justify-center gap-2 rounded-[12px] bg-[#0c9b45] px-4 py-3.5 text-sm font-bold text-white shadow-[0_5px_14px_rgba(15,150,70,.2)] disabled:bg-[#9ca3a8] disabled:shadow-none"
           >
@@ -737,7 +808,7 @@ const invalidContact = importedContacts.find(
             ) : (
               <>
                 <CheckCircle2 size={18} />
-                Submit All Helpers ({importedContacts.length})
+                Submit all after review ({importedContacts.length})
               </>
             )}
           </button>
