@@ -9,6 +9,8 @@ import {
   Sparkles,
   CheckCircle2,
   Loader2,
+  ChevronLeft,
+  PenLine,
 } from 'lucide-react'
 
 import TextInput from '../components/common/TextInput'
@@ -101,6 +103,17 @@ export default function AddHelperPage() {
   const [importError, setImportError] = useState('')
   const [savingContacts, setSavingContacts] = useState(false)
   const [importSuccessCount, setImportSuccessCount] = useState(0)
+  const [addPath, setAddPath] = useState('choose')
+
+  const contactsSupported =
+    typeof navigator !== 'undefined' && !!navigator.contacts?.select
+
+  const inReview = importedContacts.length > 0
+
+  const goToChoose = () => {
+    setAddPath('choose')
+    setError('')
+  }
 
   // Load categories + all service types
   useEffect(() => {
@@ -220,6 +233,7 @@ export default function AddHelperPage() {
       })
 
       setSuccess(true)
+      setAddPath('choose')
       setForm(blank)
 
       if (photoPreview) {
@@ -329,6 +343,7 @@ export default function AddHelperPage() {
     setImportedContacts([])
     setImportError('')
     setImportSuccessCount(0)
+    setAddPath('choose')
   }
 
   const getTypesForCategory = (categoryId) => {
@@ -413,6 +428,7 @@ const invalidContact = importedContacts.find(
 
       setImportedContacts([])
       setImportSuccessCount(savedCount)
+      setAddPath('choose')
     } catch (err) {
       setImportError(
         `${savedCount} helper(s) saved. ${
@@ -424,37 +440,77 @@ const invalidContact = importedContacts.find(
     }
   }
 
+  const subtitle = inReview
+    ? 'Check details for each contact before submitting.'
+    : addPath === 'manual'
+      ? 'Fill in the helper details below.'
+      : 'Add trusted helpers from your contacts or enter details manually.'
+
   return (
     <div className="px-4 py-5">
       <h1 className="text-[22px] font-black text-[#19212d]">
         Add Helpers
       </h1>
 
-      <p className="mt-1 text-xs leading-5 text-[#69717b]">
-        Select contacts from your phone and share their details to help the
-        community.
-      </p>
+      <p className="mt-1 text-xs leading-5 text-[#69717b]">{subtitle}</p>
 
-      <div className="mt-4 rounded-[16px] border border-[#d9ebdc] bg-[#eef9f0] p-3 text-[11px] leading-5 text-[#4d6253]">
-        <div className="flex gap-2">
-          <ShieldCheck
-            size={18}
-            className="mt-0.5 shrink-0 text-[#159447]"
-          />
+      {!inReview && addPath !== 'choose' && (
+        <button
+          type="button"
+          onClick={goToChoose}
+          className="mt-3 flex items-center gap-0.5 text-[11px] font-bold text-[#0c9b45]"
+        >
+          <ChevronLeft size={18} aria-hidden />
+          Back
+        </button>
+      )}
 
-          <span>
-            We only read contacts you select. Nothing is saved without your
-            approval.
-          </span>
+      {success && addPath === 'choose' && !inReview && (
+        <div className="mt-4">
+          <AddHelpersSuccess />
         </div>
-      </div>
+      )}
 
-      <div className="mt-4">
-        <ContactPicker onPick={picked} />
-      </div>
+      {!inReview && addPath === 'choose' && (
+        <>
+          <div className="mt-4 rounded-[16px] border border-[#d9ebdc] bg-[#eef9f0] p-3 text-[11px] leading-5 text-[#4d6253]">
+            <div className="flex gap-2">
+              <ShieldCheck
+                size={18}
+                className="mt-0.5 shrink-0 text-[#159447]"
+              />
+
+              <span>
+                We only read contacts you select. Nothing is saved without
+                your approval.
+              </span>
+            </div>
+          </div>
+
+          <div className="mt-4 space-y-3">
+            <ContactPicker onPick={picked} />
+
+            {!contactsSupported && (
+              <p className="text-center text-[9px] leading-4 text-[#858b92]">
+                Contact import works in supported mobile browsers. Use manual
+                entry on this device.
+              </p>
+            )}
+
+            <button
+              type="button"
+              onClick={() => setAddPath('manual')}
+              className="flex w-full items-center justify-center gap-2 rounded-[12px] border border-[#e7e2d9] bg-white px-4 py-3.5 text-sm font-bold text-[#19212d] shadow-sm"
+            >
+              <PenLine size={20} className="text-[#0c9b45]" aria-hidden />
+              Add Manual Entry
+            </button>
+          </div>
+        </>
+      )}
 
       {/* MULTIPLE CONTACT REVIEW */}
-      {importedContacts.length > 0 && (
+      {inReview && (
         <div className="mt-4">
           <div className="mb-3 flex items-start justify-between gap-3">
             <div>
@@ -689,21 +745,9 @@ const invalidContact = importedContacts.find(
       )}
 
       {/* MANUAL FORM */}
-      {importedContacts.length === 0 && (
+      {!inReview && addPath === 'manual' && (
         <>
-          <div className="my-4 flex items-center gap-3 text-[10px] text-[#9a9da1]">
-            <span className="h-px flex-1 bg-[#e5e1db]" />
-            OR
-            <span className="h-px flex-1 bg-[#e5e1db]" />
-          </div>
-
-          {success && (
-            <div className="mb-4">
-              <AddHelpersSuccess />
-            </div>
-          )}
-
-          <div className="mb-4 flex items-center gap-3 rounded-[16px] bg-[#fff4e2] p-3">
+          <div className="mb-4 mt-4 flex items-center gap-3 rounded-[16px] bg-[#fff4e2] p-3">
             <span className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-[#e28419]">
               <Users size={20} />
             </span>
