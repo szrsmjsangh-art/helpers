@@ -1,5 +1,6 @@
 import { Menu, Languages } from 'lucide-react'
 import LanguageSwitcher from '../common/LanguageSwitcher'
+import InstallAppButton from '../common/InstallAppButton'
 
 export default function Header() {
   return (
@@ -12,6 +13,7 @@ export default function Header() {
           <div className="truncate text-[18px] font-black leading-tight text-[#172033]">By Sanjay G Shah</div>
           <div className="mt-0.5 text-[9px] font-semibold tracking-wide text-[#7b756d]">Data from Hot deals Helping group </div>
         </div>
+        <InstallAppButton />
         <div className="hidden sm:block"><LanguageSwitcher /></div>
         <button className="flex h-10 w-10 items-center justify-center rounded-xl text-[#172033] hover:bg-orange-50" aria-label="Language">
           <Languages size={19} />

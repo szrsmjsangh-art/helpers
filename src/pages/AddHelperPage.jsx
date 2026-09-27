@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   Users,
   Camera,
@@ -22,15 +22,12 @@ import ErrorMessage from '../components/common/ErrorMessage'
 import AddHelpersSuccess from '../components/add-helper/AddHelpersSuccess'
 import ContactPicker from '../components/add-helper/ContactPicker'
 
-import {
-  getCategories,
-  getServiceTypes,
-  getAllServiceTypes,
-} from '../services/categoryService'
-
 import { submitHelper } from '../services/submissionService'
 import { uploadImage } from '../services/cloudinaryService'
 import { suggestHelperService } from '../utils/helperCategoryMatcher'
+import { useCategories } from '../hooks/useCategories'
+import { useServiceTypesCatalog } from '../hooks/useServiceTypesCatalog'
+import { invalidateHelperLists } from '../lib/queryClient'
 
 const blank = {
   name: '',
@@ -82,9 +79,8 @@ function cleanPhone(value = '') {
 }
 
 export default function AddHelperPage() {
-  const [categories, setCategories] = useState([])
-  const [types, setTypes] = useState([])
-  const [allServiceTypes, setAllServiceTypes] = useState([])
+  const { categories, error: categoriesLoadError } = useCategories()
+  const { serviceTypes: allServiceTypes } = useServiceTypesCatalog()
 
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState('')
@@ -115,40 +111,18 @@ export default function AddHelperPage() {
     setError('')
   }
 
-  // Load categories + all service types
+  const types = useMemo(() => {
+    if (!form.categoryId) return []
+    return allServiceTypes.filter(
+      (type) => type.category_id === form.categoryId
+    )
+  }, [allServiceTypes, form.categoryId])
+
   useEffect(() => {
-    const loadInitialData = async () => {
-      try {
-        const [categoryData, serviceTypeData] = await Promise.all([
-          getCategories(),
-          getAllServiceTypes(),
-        ])
-
-        setCategories(categoryData || [])
-        setAllServiceTypes(serviceTypeData || [])
-      } catch (err) {
-        setError(err?.message || 'Unable to load categories.')
-      }
+    if (categoriesLoadError) {
+      setError(categoriesLoadError)
     }
-
-    loadInitialData()
-  }, [])
-
-  // Manual form service types
-  useEffect(() => {
-    if (!form.categoryId) {
-      setTypes([])
-      return
-    }
-
-    getServiceTypes(form.categoryId)
-      .then((data) => {
-        setTypes(data || [])
-      })
-      .catch((err) => {
-        setError(err?.message || 'Unable to load service types.')
-      })
-  }, [form.categoryId])
+  }, [categoriesLoadError])
 
   // Clean preview URL
   useEffect(() => {
@@ -231,6 +205,8 @@ export default function AddHelperPage() {
         ...form,
         photoUrl,
       })
+
+      await invalidateHelperLists()
 
       setSuccess(true)
       setAddPath('choose')
@@ -471,6 +447,7 @@ export default function AddHelperPage() {
       setImportedContacts([])
       setImportSuccessCount(savedCount)
       setAddPath('choose')
+      await invalidateHelperLists()
 
       if (skippedCount > 0) {
         setImportError(

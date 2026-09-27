@@ -9,7 +9,17 @@ export default function HelperCard({ helper, onClick, serviceName }) {
   return (
     <article onClick={()=>onClick?.(helper)} className="flex cursor-pointer items-center gap-3 rounded-[15px] border border-[#ece8df] bg-white p-3 shadow-[0_3px_12px_rgba(31,41,55,0.05)]">
       <div className="flex h-[54px] w-[54px] shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#edf1f4] text-[#87909b]">
-        {helper.photo_url ? <img src={helper.photo_url} alt={helper.name} className="h-full w-full object-cover"/> : <UserRound size={26}/>}      
+        {helper.photo_url ? (
+          <img
+            src={helper.photo_url}
+            alt={helper.name}
+            className="h-full w-full object-cover"
+            loading="lazy"
+            decoding="async"
+          />
+        ) : (
+          <UserRound size={26} />
+        )}      
       </div>
       <div className="min-w-0 flex-1">
         <h3 className="truncate text-[14px] font-extrabold text-[#172033]">{helper.name}</h3>
