@@ -22,12 +22,18 @@ import ErrorMessage from '../components/common/ErrorMessage'
 import AddHelpersSuccess from '../components/add-helper/AddHelpersSuccess'
 import ContactPicker from '../components/add-helper/ContactPicker'
 
-import { submitHelper } from '../services/submissionService'
+import {
+  submitHelper,
+  submitHelpersBatchChunked,
+} from '../services/submissionService'
 import { uploadImage } from '../services/cloudinaryService'
 import { suggestHelperService } from '../utils/helperCategoryMatcher'
 import { useCategories } from '../hooks/useCategories'
 import { useServiceTypesCatalog } from '../hooks/useServiceTypesCatalog'
 import { invalidateHelperLists } from '../lib/queryClient'
+const USE_BATCH_RPC = true
+/** More than this count → quick upload immediately (no review screen). */
+const REVIEW_CONTACT_LIMIT = 4
 
 const blank = {
   name: '',
@@ -99,6 +105,7 @@ export default function AddHelperPage() {
   const [importError, setImportError] = useState('')
   const [savingContacts, setSavingContacts] = useState(false)
   const [importSuccessCount, setImportSuccessCount] = useState(0)
+  const [bulkUploadTotal, setBulkUploadTotal] = useState(0)
   const [addPath, setAddPath] = useState('choose')
 
   const contactsSupported =
@@ -272,6 +279,16 @@ export default function AddHelperPage() {
       return
     }
 
+    if (preparedContacts.length > REVIEW_CONTACT_LIMIT) {
+      setImportError('')
+      setImportSuccessCount(0)
+      setBulkUploadTotal(preparedContacts.length)
+      void submitContactList(preparedContacts, { quick: true }).finally(() =>
+        setBulkUploadTotal(0)
+      )
+      return
+    }
+
     setImportedContacts(preparedContacts)
   }
 
@@ -390,15 +407,15 @@ export default function AddHelperPage() {
     photoUrl: null,
   })
 
-  const submitImportedContacts = async ({ quick = false } = {}) => {
-    if (!importedContacts.length || savingContacts) {
+  const submitContactList = async (contacts, { quick = false } = {}) => {
+    if (!contacts.length || savingContacts) {
       return
     }
 
     setImportError('')
     setImportSuccessCount(0)
 
-    const invalidContact = importedContacts.find((contact) => {
+    const invalidContact = contacts.find((contact) => {
       if (!contact.name.trim() || !/^[6-9]\d{9}$/.test(contact.mobile)) {
         return true
       }
@@ -419,28 +436,47 @@ export default function AddHelperPage() {
 
     setSavingContacts(true)
 
-    let savedCount = 0
     let skippedCount = 0
+    const tasks = []
+
+    for (const contact of contacts) {
+      const ids = resolveContactIds(contact)
+
+      if (!ids) {
+        skippedCount += 1
+        continue
+      }
+
+      tasks.push(contactPayloadFromReview(contact, ids))
+    }
 
     try {
-      for (const contact of importedContacts) {
-        const ids = resolveContactIds(contact)
+      let savedCount = 0
+      let failedCount = 0
+      let firstFailMessage = ''
 
-        if (!ids) {
-          skippedCount += 1
-          continue
-        }
-
-        await submitHelper(contactPayloadFromReview(contact, ids))
-
-        savedCount += 1
-        setImportSuccessCount(savedCount)
+      if (USE_BATCH_RPC && tasks.length > 0) {
+        const batchResult = await submitHelpersBatchChunked(
+          tasks,
+          30,
+          (count) => setImportSuccessCount(count)
+        )
+        savedCount = batchResult.saved_count
+        failedCount = batchResult.failed_count
+        firstFailMessage = batchResult.failed?.[0]?.error || ''
+      } else if (tasks.length === 1) {
+        await submitHelper(tasks[0])
+        savedCount = 1
+        setImportSuccessCount(1)
       }
 
       if (savedCount === 0) {
-        setImportError(
-          'No helpers were saved. Check names and that categories are loaded.'
-        )
+        const firstError =
+          firstFailMessage ||
+          (skippedCount > 0
+            ? 'No helpers were saved. Some contacts could not get a category.'
+            : 'No helpers were saved. Check names and that categories are loaded.')
+        setImportError(firstError)
         return
       }
 
@@ -449,29 +485,48 @@ export default function AddHelperPage() {
       setAddPath('choose')
       await invalidateHelperLists()
 
+      const parts = []
       if (skippedCount > 0) {
-        setImportError(
-          `${savedCount} saved. ${skippedCount} skipped (could not assign category).`
+        parts.push(
+          `${skippedCount} skipped (could not assign category)`
         )
       }
+      if (failedCount > 0) {
+        parts.push(
+          `${failedCount} failed (${firstFailMessage || 'see details'})`
+        )
+      }
+      if (parts.length > 0) {
+        setImportError(`${savedCount} saved. ${parts.join('. ')}.`)
+      }
     } catch (err) {
-      setImportError(
-        savedCount > 0
-          ? `${savedCount} helper(s) saved. ${
-              err?.message || 'Unable to save remaining helpers.'
-            }`
-          : err?.message || 'Unable to save helpers.'
-      )
+      const message = err?.message || ''
+      if (
+        message.includes('submit_directory_helpers') &&
+        message.includes('does not exist')
+      ) {
+        setImportError(
+          'Batch upload is not set up on Supabase yet. Run supabase/submit_directory_helpers.sql in SQL Editor, then try again.'
+        )
+      } else {
+        setImportError(message || 'Unable to save helpers.')
+      }
     } finally {
       setSavingContacts(false)
     }
+  }
+
+  const submitImportedContacts = async ({ quick = false } = {}) => {
+    return submitContactList(importedContacts, { quick })
   }
 
   const subtitle = inReview
     ? 'Check details for each contact before submitting.'
     : addPath === 'manual'
       ? 'Fill in the helper details below.'
-      : 'Add trusted helpers from your contacts or enter details manually.'
+      : savingContacts && bulkUploadTotal > 0
+        ? `Uploading ${bulkUploadTotal} contacts without review…`
+        : 'Add trusted helpers from your contacts or enter details manually.'
 
   return (
     <div className="px-4 py-5">
@@ -498,6 +553,25 @@ export default function AddHelperPage() {
         </div>
       )}
 
+      {!inReview &&
+        !savingContacts &&
+        importSuccessCount > 0 &&
+        !importError && (
+          <div className="mt-4 flex items-center gap-2 rounded-xl bg-[#eef9f0] px-3 py-2.5 text-[11px] font-semibold text-[#168443]">
+            <CheckCircle2 size={16} />
+            {importSuccessCount} helper
+            {importSuccessCount !== 1 ? 's' : ''} uploaded successfully.
+          </div>
+        )}
+
+      {savingContacts && bulkUploadTotal > 0 && !inReview && (
+        <div className="mt-4 flex items-center gap-2 rounded-xl bg-[#f0f6ff] px-3 py-2.5 text-[11px] font-semibold text-[#3b5f8f]">
+          <Loader2 size={16} className="animate-spin" />
+          Uploading {importSuccessCount} / {bulkUploadTotal}… (no review for
+          large selections)
+        </div>
+      )}
+
       {!inReview && addPath === 'choose' && (
         <>
           <div className="mt-4 rounded-[16px] border border-[#d9ebdc] bg-[#eef9f0] p-3 text-[11px] leading-5 text-[#4d6253]">
@@ -515,7 +589,18 @@ export default function AddHelperPage() {
           </div>
 
           <div className="mt-4 space-y-3">
-            <ContactPicker onPick={picked} />
+            <ContactPicker
+              onPick={picked}
+              disabled={savingContacts}
+            />
+
+            {contactsSupported && (
+              <p className="text-center text-[9px] leading-4 text-[#858b92]">
+                Up to {REVIEW_CONTACT_LIMIT} contacts: review before submit.
+                More than {REVIEW_CONTACT_LIMIT}: uploaded automatically (name +
+                mobile, suggested category).
+              </p>
+            )}
 
             {!contactsSupported && (
               <p className="text-center text-[9px] leading-4 text-[#858b92]">

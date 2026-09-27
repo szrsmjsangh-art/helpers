@@ -237,3 +237,5 @@ Private project (`package.json`: `"private": true`). Header credits community da
 - **`supabase/part3_rpc_fix.sql`** — drop old RPC signature before changing return type (`42P13`).
 
 If submit works in the SQL editor with your current RPC, you may not need to replace the function from the script.
+
+**Batch contact upload:** run `supabase/submit_directory_helpers.sql` once, then see **[docs/BATCH_RPC_SETUP.md](docs/BATCH_RPC_SETUP.md)**.

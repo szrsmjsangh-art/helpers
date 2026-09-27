@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { ContactRound, Loader2 } from 'lucide-react'
 
-export default function ContactPicker({ onPick }) {
+export default function ContactPicker({ onPick, disabled = false }) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
@@ -10,7 +10,7 @@ export default function ContactPicker({ onPick }) {
     !!navigator.contacts?.select
 
   const pick = async () => {
-    if (!supported || loading) return
+    if (!supported || loading || disabled) return
 
     setError('')
     setLoading(true)
@@ -40,7 +40,7 @@ export default function ContactPicker({ onPick }) {
       <button
         type="button"
         onClick={pick}
-        disabled={!supported || loading}
+        disabled={!supported || loading || disabled}
         className="flex w-full items-center justify-center gap-2 rounded-[12px] bg-[#0c9b45] px-4 py-3.5 text-sm font-bold text-white shadow-[0_5px_14px_rgba(15,150,70,.2)] disabled:bg-[#9ca3a8] disabled:shadow-none"
       >
         {loading ? (
