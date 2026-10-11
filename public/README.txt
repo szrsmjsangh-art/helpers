@@ -1,29 +1,15 @@
-Call2Local public assets (symbol-only; no website name in the logo)
+Call2Local larger PWA icons
 
-Copy every file in this folder into your Vite project's public/ folder.
+Copy these PNG files into your project's public/ folder, replacing the old pwa-192x192.png and pwa-512x512.png.
 
-Header:
-  /call2local-symbol.png
+- pwa-192x192.png and pwa-512x512.png: mark fills more of the square, reducing oversized white margins.
+- pwa-maskable-192x192.png and pwa-maskable-512x512.png: mark is kept within the safe area for launchers that crop icons.
+- call2local-symbol.png: symbol-only header logo.
 
-PWA manifest:
-  /pwa-192x192.png
-  /pwa-512x512.png
+Recommended manifest icons:
+{ src: '/pwa-192x192.png', sizes: '192x192', type: 'image/png', purpose: 'any' },
+{ src: '/pwa-512x512.png', sizes: '512x512', type: 'image/png', purpose: 'any' },
+{ src: '/pwa-maskable-192x192.png', sizes: '192x192', type: 'image/png', purpose: 'maskable' },
+{ src: '/pwa-maskable-512x512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' }
 
-Browser favicon:
-  /favicon.ico
-  Optional PNGs: favicon-16.png, favicon-32.png, favicon-48.png
-
-Example VitePWA manifest:
-manifest: {
-  name: 'Call2Local - Local Services',
-  short_name: 'Call2Local',
-  description: 'Connect Locally. Easily.',
-  theme_color: '#fffdf8',
-  background_color: '#fffdf8',
-  display: 'standalone',
-  start_url: '/',
-  icons: [
-    { src: '/pwa-192x192.png', sizes: '192x192', type: 'image/png' },
-    { src: '/pwa-512x512.png', sizes: '512x512', type: 'image/png' }
-  ]
-}
+After replacing files, rebuild and redeploy. Installed apps may need to be removed and installed again to refresh their icon.
