@@ -139,25 +139,61 @@ export default function HomePage() {
 
   return (
     <div>
-      <section className="relative overflow-hidden border-b border-orange-100 bg-gradient-to-br from-[#f4a13c] via-[#f7c77f] to-[#7eb8b4] px-4 pb-5 pt-5">
-        <div className="absolute inset-0 opacity-20 [background-image:radial-gradient(circle_at_20%_20%,white_0,transparent_25%),radial-gradient(circle_at_80%_70%,white_0,transparent_25%)]" />
-        <div className="relative min-h-[150px] rounded-[20px] border border-white/50 bg-black/10 p-5 shadow-inner backdrop-blur-[1px]">
-          <div className="max-w-[250px] text-[27px] font-black italic leading-[1.12] text-white drop-shadow-sm">
-            Find Trusted Helpers in Our Community
-          </div>
-          <div className="mt-3 text-[11px] font-semibold text-white/90">
-            Bharuch · Find · Connect · Support
-          </div>
-        </div>
-        <div className="relative -mt-5">
-          <SearchBar
-            value={search}
-            onChange={setSearch}
-            onReset={resetFilters}
-            resetDisabled={!hasActiveFilter}
-          />
-        </div>
-      </section>
+     
+{/* Main Sponsor / CSR Banner */}
+<section className="border-b border-orange-100 bg-white px-4 py-3">
+  <div className="relative mx-auto flex min-h-[125px] w-full max-w-[480px] items-center gap-3 overflow-hidden rounded-2xl border border-orange-100 bg-gradient-to-r from-orange-50 via-white to-emerald-50 p-4 shadow-sm">
+
+    {/* Sponsor Logo */}
+    <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-xl border border-slate-100 bg-white p-2 shadow-sm">
+      <img
+        src="/sponsor-logo.png"
+        alt="Main Sponsor"
+        className="max-h-full max-w-full object-contain"
+        onError={(e) => {
+          e.currentTarget.style.display = 'none'
+        }}
+      />
+    </div>
+
+    {/* Sponsor Information */}
+    <div className="min-w-0 flex-1">
+      <div className="mb-1 text-[10px] font-bold uppercase tracking-[0.15em] text-emerald-700">
+        Main Sponsor · CSR Partner
+      </div>
+
+      <h2 className="text-lg font-extrabold leading-tight text-[#172033]">
+        Your Community, Our Commitment
+      </h2>
+
+      <p className="mt-1 text-xs leading-relaxed text-slate-600">
+        Supporting local helpers and empowering our community.
+      </p>
+    </div>
+  </div>
+</section>
+
+{/* Independent Search Section */}
+<section className="border-b border-slate-100 bg-[#fffdf8] px-4 py-4">
+  <div className="mx-auto w-full max-w-[480px]">
+    {/*<div className="mb-3">
+      <h1 className="text-xl font-extrabold text-[#172033]">
+        Find Trusted Local Helpers
+      </h1>
+      <p className="mt-1 text-sm text-slate-500">
+        Search by name, service or area
+      </p>
+    </div>*/}
+
+    <SearchBar
+      value={search}
+      onChange={setSearch}
+      onReset={resetFilters}
+      resetDisabled={!hasActiveFilter}
+    />
+  </div>
+</section>
+
 
       <div className="space-y-6 px-4 py-5">
         <section>
